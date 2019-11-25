@@ -11,12 +11,14 @@ class TribeBubbles(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle('Tribe Bubbles')
-        self.setGeometry(400, 150, 600, 600)
+        self.setGeometry(400, 150, 650, 650)
+        self.multiplier = 1
+
         self.squares = [[[] for q in range(8)] for r in range(8)]
         for i in range(8):
             for j in range(8):
-                x = 20 + cell_size * i
-                y = 20 + cell_size * j
+                x = 40 + cell_size * i
+                y = 40 + cell_size * j
                 self.squares[i][j] = QRect(QPoint(x, y), QSize(cell_size, cell_size))
 
         self.show()
@@ -34,10 +36,17 @@ class TribeBubbles(QWidget):
             for value in row:
                 qp.drawRect(value)
 
+        qp.drawText(250, 620, "Score:\t " + "x" + str(self.multiplier))
+
         qp.end()
 
-    def MousePressEvent(self, event):
-        pass
+    def mousePressEvent(self, event):
+        x = event.x()
+        y = event.y()
+        for col in self.squares:
+            for square in col:
+                if square.__contains__(QPoint(x, y)):
+                    print(self.squares.index(col), col.index(square))
 
 
 if __name__ == '__main__':
