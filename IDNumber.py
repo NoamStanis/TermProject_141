@@ -15,6 +15,7 @@ class TribeBubbles(QWidget):
         self.multiplier = 1
 
         self.squares = [[[] for q in range(8)] for r in range(8)]
+        self.shapes = [[[] for o in range(8)] for p in range(8)]
         for i in range(8):
             for j in range(8):
                 x = 40 + cell_size * i
@@ -32,9 +33,11 @@ class TribeBubbles(QWidget):
         qp.setPen(grid_pen)
         qp.setBrush(grid_brush)
 
-        for row in self.squares:
-            for value in row:
+        for col in self.squares:
+            for value in col:
                 qp.drawRect(value)
+                if type(self.shapes[self.squares.index(col)][col.index(value)]) == QPoint:
+                    qp.drawEllipse(self.shapes[self.squares.index(col)][col.index(value)], 25, 25)
 
         qp.drawText(250, 620, "Score:\t " + "x" + str(self.multiplier))
 
@@ -46,7 +49,9 @@ class TribeBubbles(QWidget):
         for col in self.squares:
             for square in col:
                 if square.__contains__(QPoint(x, y)):
+                    self.shapes[self.squares.index(col)][col.index(square)] = QPoint(square.center().x(), square.center().y())
                     print(self.squares.index(col), col.index(square))
+        self.update()
 
 
 if __name__ == '__main__':
