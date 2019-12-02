@@ -36,20 +36,26 @@ class TribeBubbles(QWidget):
         qp.setPen(grid_pen)
         qp.setBrush(grid_brush)
 
-        for col in self.squares:
-            for value in col:
+        for row in self.squares:
+            for value in row:
                 qp.drawRect(value)
-                if type(self.circles[self.squares.index(col)][col.index(value)]) == QPoint and \
-                        type(self.blockers[self.squares.index(col)][col.index(value)]) != QRect:  # draws the circle and removes if blocked
-                    qp.drawEllipse(self.circles[self.squares.index(col)][col.index(value)], 25, 25)
+                circle = self.circles[row.index(value)][self.squares.index(row)]
+                blocker = self.blockers[row.index(value)][self.squares.index(row)]
 
-                if type(self.blockers[self.squares.index(col)][col.index(value)]) == QRect: # draws the blocker
+                if isinstance(circle, QPoint) and not isinstance(blocker, QRect):  # draws the circle and removes if blocked
+                    qp.drawEllipse(circle, 25, 25)
+
+                if type(blocker) == QRect: # draws the blocker
                     qp.setPen(QPen(0))
                     qp.setBrush(QBrush(QColor(204, 156, 120), Qt.SolidPattern))
-                    qp.drawRect(self.blockers[self.squares.index(col)][col.index(value)])
+                    qp.drawRect(blocker)
                     qp.setPen(grid_pen)
                     qp.setBrush(grid_brush)
 
+                if type(circle) == QPoint and type(blocker) == QRect:  # removes circle from the circle list if blocker is placed in same location
+                    circle = []
+
+        #print(self.circles)
         qp.drawText(250, 620, "Score:\t " + "x" + str(self.multiplier))
 
         qp.end()
@@ -57,20 +63,30 @@ class TribeBubbles(QWidget):
     def mousePressEvent(self, event):
         x = event.x()
         y = event.y()
-        block_point = QPoint(0, 0)
+        block_point = QPoint()
+
         while not 20 <= block_point.x() <= 580 and not 20 <= block_point.y() <= 580:  # makes sure the blocker in the grid
             ranx = randint(0, 7)
             rany = randint(0, 7)
             block_point = QPoint(70 * (ranx + 1) - 18, 70 * (rany + 1) - 18)
 
-        for col in self.squares:
-            for square in col:
+        for row in self.squares:
+            for square in row:
                 if square.__contains__(QPoint(x, y)):
-                    self.circles[self.squares.index(col)][col.index(square)] = QPoint(square.center().x(), square.center().y())  # adds a point for the circle
+                    self.circles[row.index(square)][self.squares.index(row)] = QPoint(square.center().x(), square.center().y())  # adds a point for the circle
                     #  print(self.squares.index(col), col.index(square))
 
-        self.blockers[ranx][rany] = QRect(block_point, QSize(45, 45)) # adds the blocker to the list
+        self.blockers[rany][ranx] = QRect(block_point, QSize(45, 45)) # adds the blocker to the list
 
+        # Check for scoring
+        score = False
+        print("\nCircles")
+        for row in self.circles:
+            print(row)
+
+        print("\nBlockers")
+        for r in self.blockers:
+            print(r)
         self.update()
 
 
