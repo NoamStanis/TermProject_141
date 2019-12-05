@@ -16,7 +16,8 @@ class TribeBubbles(QWidget):
         self.multiplier = 1
 
         self.squares = [[[] for q in range(8)] for r in range(8)]
-        self.circles = [[[] for o in range(8)] for p in range(8)]
+        self.circlepoints = [[[] for o in range(8)] for p in range(8)]
+        self.circles = [['_' for o in range(8)] for p in range(8)]
         self.blockers = [[[] for s in range(8)] for t in range(8)]
 
         for i in range(8):
@@ -39,7 +40,7 @@ class TribeBubbles(QWidget):
         for row in self.squares:
             for value in row:
                 qp.drawRect(value)
-                circle = self.circles[row.index(value)][self.squares.index(row)]
+                circle = self.circlepoints[row.index(value)][self.squares.index(row)]
                 blocker = self.blockers[row.index(value)][self.squares.index(row)]
 
                 if isinstance(circle, QPoint) and not isinstance(blocker, QRect):  # draws the circle and removes if blocked
@@ -73,20 +74,45 @@ class TribeBubbles(QWidget):
         for row in self.squares:
             for square in row:
                 if square.__contains__(QPoint(x, y)):
-                    self.circles[row.index(square)][self.squares.index(row)] = QPoint(square.center().x(), square.center().y())  # adds a point for the circle
+                    self.circlepoints[row.index(square)][self.squares.index(row)] = QPoint(square.center().x(), square.center().y())  # adds a point for the circle
+                    self.circles[row.index(square)][self.squares.index(row)] = 'O'
                     #  print(self.squares.index(col), col.index(square))
 
         self.blockers[rany][ranx] = QRect(block_point, QSize(45, 45)) # adds the blocker to the list
 
         # Check for scoring
         score = False
-        print("\nCircles")
         for row in self.circles:
-            print(row)
+            rowstring = ''.join(row)
+            nO = 8
+            while 4 <= nO <= 8:
+                if 'O'*nO in rowstring:
+                    for i in range(len(row)):
+                        try:
+                            if row[i:i+nO] == ['O' for j in range(nO)]:
+                                row[i:i + nO] = ['_' for k in range(nO)]
+                        except IndexError:
+                            continue
+                if nO == 4:
+                    break
 
-        print("\nBlockers")
-        for r in self.blockers:
-            print(r)
+                else:
+                    nO -= 1
+
+        for i in range(8):
+            for j in range(8):
+                if self.circles[i][j] != 'O':
+                    self.circlepoints[i][j] = []
+                if isinstance(self.blockers[i][j], QRect):
+                    self.circles[i][j] = '_'
+                    self.circlepoints[i][j] = []
+
+
+
+
+        # print("\nBlockers")
+        # for r in self.blockers:
+        #     print(r)
         self.update()
 
 
