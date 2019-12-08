@@ -15,6 +15,7 @@ class TribeBubbles(QWidget):
         self.setGeometry(400, 150, 650, 650)
         self.multiplier = 1
         self.score = 0
+        self.in_a_row = 1
 
         self.squares = [[[] for q in range(8)] for r in range(8)]
         self.circlepoints = [[[] for o in range(8)] for p in range(8)]
@@ -85,44 +86,10 @@ class TribeBubbles(QWidget):
                         self.circlepoints[row.index(square)][self.squares.index(row)] = QPoint(square.center().x(),
                                                                                                square.center().y())  # adds a point for the circle
                         self.circles[row.index(square)][self.squares.index(row)] = 'O'
-                        #  print(self.squares.index(col), col.index(square))
 
-            self.blockers[rany][ranx] = QRect(block_point, QSize(45, 45))  # adds the blocker to the list
+            #self.blockers[rany][ranx] = QRect(block_point, QSize(45, 45))  # adds the blocker to the list
 
-            # Check for scoring
-
-            vertcircles = list(map(list, zip(*self.circles)))
-            for row in range(len(self.circles)):  # Checks horizontal scoring
-                rowstring = ''.join(self.circles[row])
-                nO = 8
-                while nO >= 4:
-                    if 'O' * nO in rowstring:
-                        first = rowstring.index('O')
-                        last = rowstring.rindex('O')
-                        for j in range(first, last + 1):
-                            self.circles[row][j] = '_'
-                        self.score += nO
-                        break
-                    if nO == 4:
-                        break
-                    else:
-                        nO -= 1
-
-            for col in range(len(vertcircles)):  # vertical score check
-                col_string = ''.join(vertcircles[col])
-                numberOs = 8
-                while numberOs >= 4:
-                    if 'O' * numberOs in col_string:
-                        first = col_string.index('O')
-                        last = col_string.rindex('O')
-                        for i in range(first, last + 1):
-                            self.circles[i][col] = '_'
-                        self.score += numberOs
-                        break
-                    if numberOs == 4:
-                        break
-                    else:
-                        numberOs -= 1
+            self.scoreCheck()
 
             for i in range(8):  # stops clicks on blockers
                 for j in range(8):
@@ -136,6 +103,61 @@ class TribeBubbles(QWidget):
             # for r in self.blockers:
             #     print(r)
         self.update()
+
+    def scoreCheck(self):
+        """
+        Checks if a scoring move has been completed with the currently placed bubbles and blockers.
+        """""
+        to_score = 0
+        vertcircles = list(map(list, zip(*self.circles)))
+        horizontal_scored = False
+        vertical_scored = False
+
+        for row in range(len(self.circles)):  # Checks horizontal scoring
+            rowstring = ''.join(self.circles[row])
+            nO = 8  # number of Os in a row
+            while nO >= 4:
+                if 'O' * nO in rowstring:
+                    first = rowstring.index('O')
+                    last = rowstring.rindex('O')
+                    for j in range(first, last + 1):
+                        self.circles[row][j] = '_'
+                    to_score += nO
+                    horizontal_scored = True
+                    break
+                if nO == 4:
+                    break
+                else:
+                    nO -= 1
+
+        for col in range(len(vertcircles)):  # vertical score check
+            col_string = ''.join(vertcircles[col])
+            numberOs = 8  # similar to nO above
+            while numberOs >= 4:
+                if 'O' * numberOs in col_string:
+                    first = col_string.index('O')
+                    last = col_string.rindex('O')
+                    for i in range(first, last + 1):
+                        self.circles[i][col] = '_'
+                    to_score += numberOs
+                    vertical_scored = True
+
+                    break
+                if numberOs == 4:
+                    break
+                else:
+                    numberOs -= 1
+
+        if vertical_scored and horizontal_scored:
+            to_score *= 2 * self.in_a_row
+            self.score += to_score
+            self.multiplier = 2 * self.in_a_row
+            self.in_a_row += 1
+
+        else:
+            self.score += to_score
+            self.multiplier = 1
+            self.in_a_row = 1
 
 
 if __name__ == '__main__':
