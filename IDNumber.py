@@ -1,9 +1,9 @@
 import sys
+from random import randint
 
 from PyQt5.QtCore import Qt, QRect, QPoint, QSize
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor
 from PyQt5.QtWidgets import QWidget, QApplication, QMainWindow
-from random import randint
 
 cell_size = 70
 
@@ -68,6 +68,8 @@ class TribeBubbles(QWidget):
         x = event.x()
         y = event.y()
         block_point = QPoint()
+        gridx = (x - 40) // 70
+        gridy = (y - 40) // 70
 
         while not 20 <= block_point.x() <= 580 and not 20 <= block_point.y() <= 580:  # makes sure the blocker in the grid
             ranx = randint(0, 7)
@@ -87,7 +89,7 @@ class TribeBubbles(QWidget):
                                                                                                square.center().y())  # adds a point for the circle
                         self.circles[row.index(square)][self.squares.index(row)] = 'O'
 
-            #self.blockers[rany][ranx] = QRect(block_point, QSize(45, 45))  # adds the blocker to the list
+            self.blockers[rany][ranx] = QRect(block_point, QSize(45, 45))  # adds the blocker to the list
 
             self.scoreCheck()
 
@@ -99,9 +101,6 @@ class TribeBubbles(QWidget):
                         self.circles[i][j] = '_'
                         self.circlepoints[i][j] = []
 
-            # print("\nBlockers")
-            # for r in self.blockers:
-            #     print(r)
         self.update()
 
     def scoreCheck(self):
@@ -122,7 +121,10 @@ class TribeBubbles(QWidget):
                     last = rowstring.rindex('O')
                     for j in range(first, last + 1):
                         self.circles[row][j] = '_'
-                    to_score += nO
+                    if to_score == 0:
+                        to_score += nO
+                    elif to_score > 0:
+                        to_score += nO - 1
                     horizontal_scored = True
                     break
                 if nO == 4:
@@ -139,7 +141,10 @@ class TribeBubbles(QWidget):
                     last = col_string.rindex('O')
                     for i in range(first, last + 1):
                         self.circles[i][col] = '_'
-                    to_score += numberOs
+                    if to_score == 0:
+                        to_score += numberOs
+                    elif to_score > 0:
+                        to_score += numberOs - 1
                     vertical_scored = True
 
                     break
