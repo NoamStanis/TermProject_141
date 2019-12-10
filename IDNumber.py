@@ -1,9 +1,12 @@
 import sys
+from time import time
+from os import execl
 from random import randint
 
 from PyQt5.QtCore import Qt, QRect, QPoint, QSize
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor
-from PyQt5.QtWidgets import QWidget, QApplication, QMainWindow
+from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QPixmap
+from PyQt5.QtWidgets import QWidget, QApplication, QMainWindow, QPushButton, QSplashScreen
+
 
 cell_size = 70
 
@@ -16,6 +19,10 @@ class TribeBubbles(QWidget):
         self.multiplier = 1
         self.score = 0
         self.in_a_row = 1
+        print('\n' * 10)
+        self.newgame = QPushButton("New Game!", self)
+        self.newgame.setGeometry(45, 610, 150, 30)
+        self.newgame.clicked.connect(lambda restart: execl(sys.executable, sys.executable, *sys.argv))
 
         self.squares = [[[] for q in range(8)] for r in range(8)]
         self.circlepoints = [[[] for o in range(8)] for p in range(8)]
@@ -89,7 +96,7 @@ class TribeBubbles(QWidget):
                                                                                                square.center().y())  # adds a point for the circle
                         self.circles[row.index(square)][self.squares.index(row)] = 'O'
 
-            self.blockers[rany][ranx] = QRect(block_point, QSize(45, 45))  # adds the blocker to the list
+            # self.blockers[rany][ranx] = QRect(block_point, QSize(45, 45))  # adds the blocker to the list
 
             self.scoreCheck()
 
@@ -111,6 +118,7 @@ class TribeBubbles(QWidget):
         vertcircles = list(map(list, zip(*self.circles)))
         horizontal_scored = False
         vertical_scored = False
+        diagonal_scored = False
 
         for row in range(len(self.circles)):  # Checks horizontal scoring
             rowstring = ''.join(self.circles[row])
@@ -118,7 +126,7 @@ class TribeBubbles(QWidget):
             while nO >= 4:
                 if 'O' * nO in rowstring:
                     first = rowstring.index('O')
-                    last = rowstring.rindex('O')
+                    last = rowstring.rindex('OOO') + 2
                     for j in range(first, last + 1):
                         self.circles[row][j] = '_'
                     if to_score == 0:
@@ -138,7 +146,7 @@ class TribeBubbles(QWidget):
             while numberOs >= 4:
                 if 'O' * numberOs in col_string:
                     first = col_string.index('O')
-                    last = col_string.rindex('O')
+                    last = col_string.rindex('OOO') + 2
                     for i in range(first, last + 1):
                         self.circles[i][col] = '_'
                     if to_score == 0:
@@ -146,20 +154,79 @@ class TribeBubbles(QWidget):
                     elif to_score > 0:
                         to_score += numberOs - 1
                     vertical_scored = True
-
                     break
                 if numberOs == 4:
                     break
                 else:
                     numberOs -= 1
 
-        if vertical_scored and horizontal_scored:
+        for x in range(8):  # diagonal sloping downward
+            for y in range(8):
+                try:
+                    if self.circles[x][y] == 'O' == self.circles[x + 1][y + 1] == self.circles[x + 2][y + 2] == \
+                            self.circles[x + 3][y + 3]:
+
+                        for i in range(4):
+                            self.circles[x + i][y + i] = '_'
+
+                        if to_score == 0:
+                            to_score += 4
+                        elif to_score > 0:
+                            to_score += 3
+                        diagonal_scored = True
+
+                        if self.circles[x + 4][y + 4] == 'O':
+                            self.circles[x + 4][y + 4] = '_'
+                            to_score += 1
+
+                            if self.circles[x + 5][y + 5] == 'O':
+                                self.circles[x + 5][y + 5] = '_'
+                                to_score += 1
+
+                                if self.circles[x + 6][y + 6] == 'O':
+                                    self.circles[x + 6][y + 6] = '_'
+                                    to_score += 1
+
+                                    break
+                                break
+                            break
+                        break
+
+                except IndexError:
+                    continue
+
+        # Adding the  score with the multiplier in mind
+        print(vertical_scored, horizontal_scored, diagonal_scored)
+        if vertical_scored and horizontal_scored and diagonal_scored:
+            print("three scored")
+            to_score *= 3 * self.in_a_row
+            self.score += to_score
+            self.multiplier = 3 * self.in_a_row
+            self.in_a_row += 1
+
+        elif vertical_scored and horizontal_scored:
+            print("two scored")
             to_score *= 2 * self.in_a_row
             self.score += to_score
             self.multiplier = 2 * self.in_a_row
             self.in_a_row += 1
 
-        else:
+        elif vertical_scored and diagonal_scored:
+            print("two scored")
+            to_score *= 2 * self.in_a_row
+            self.score += to_score
+            self.multiplier = 2 * self.in_a_row
+            self.in_a_row += 1
+
+        elif diagonal_scored and horizontal_scored:
+            print("two scored")
+            to_score *= 2 * self.in_a_row
+            self.score += to_score
+            self.multiplier = 2 * self.in_a_row
+            self.in_a_row += 1
+
+        elif diagonal_scored or horizontal_scored or vertical_scored:
+            print('one scored')
             self.score += to_score
             self.multiplier = 1
             self.in_a_row = 1
@@ -167,6 +234,15 @@ class TribeBubbles(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    pixmap = QPixmap('Tribe_Bubbles.jpg')
+    splash = QSplashScreen(pixmap)
+    splash.show()
+    for i in range(1, 45):
+        t = time()
+        while time() < t + 0.1:
+            app.processEvents()
+
     window = QMainWindow()
+    splash.finish(window)
     ex = TribeBubbles()
     sys.exit(app.exec_())
