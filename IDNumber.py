@@ -2,11 +2,9 @@ import sys
 from os import execl
 from random import randint
 
-from PyQt5.QtCore import Qt, QRect, QPoint, QSize
+from PyQt5.QtCore import Qt, QRect, QPoint, QSize, QTimer, QTime
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QPixmap
-from PyQt5.QtWidgets import QWidget, QApplication, QMainWindow, QPushButton, QSplashScreen
-
-cell_size = 70
+from PyQt5.QtWidgets import QWidget, QApplication, QMainWindow, QPushButton, QSplashScreen, QLabel
 
 
 class TribeBubbles(QWidget):
@@ -17,6 +15,16 @@ class TribeBubbles(QWidget):
         self.multiplier = 1
         self.score = 0
         self.in_a_row = 1
+        self.gameover = False
+
+        self.timer = QTimer()
+        self.time_int = 0
+        self.timer.timeout.connect(self.time)
+        self.timer.start(1000)
+
+        self.timerlabel = QLabel(self)
+        self.timerlabel.setGeometry(40, 5, 200, 50)
+
         self.newgame = QPushButton("New Game!", self)
         self.newgame.setGeometry(45, 610, 150, 30)
         self.newgame.clicked.connect(lambda restart: execl(sys.executable, sys.executable, *sys.argv))
@@ -26,12 +34,13 @@ class TribeBubbles(QWidget):
         self.circles = [['_' for o in range(8)] for p in range(8)]
         self.blockers = [[[] for s in range(8)] for t in range(8)]
         self.blocker_list = []
+        self.combined_list = [[[] for q in range(8)] for r in range(8)]
 
         for i in range(8):
             for j in range(8):
-                x = 40 + cell_size * i
-                y = 40 + cell_size * j
-                self.squares[i][j] = QRect(QPoint(x, y), QSize(cell_size, cell_size))
+                x = 40 + 70 * i
+                y = 40 + 70 * j
+                self.squares[i][j] = QRect(QPoint(x, y), QSize(70, 70))
 
         self.show()
 
@@ -98,12 +107,27 @@ class TribeBubbles(QWidget):
                                                                                                square.center().y())  # adds a point for the circle
                         self.circles[row.index(square)][self.squares.index(row)] = 'O'
 
-            #self.blockers[rany][ranx] = QRect(block_point, QSize(45, 45))  # adds the blocker to the list
-            #self.blocker_list.append((rany, ranx))
+            self.blockers[rany][ranx] = QRect(block_point, QSize(45, 45))  # adds the blocker to the list
+            self.blocker_list.append((rany, ranx))
 
             self.scoreCheck()
 
         self.update()
+
+        for x in range(8):
+            for y in range(8):
+                pass
+                if self.circles[x][y] != '_':
+                    self.combined_list[x][y] = self.circles[x][y]
+                elif isinstance(self.blockers[x][y], QRect):
+                    self.combined_list[x][y] = 'X'
+                else:
+                    self.combined_list[x][y] = []
+
+        if any([] in value for value in self.combined_list):
+            self.gameover = False
+        else:
+            self.gameover = True
 
     def scoreCheck(self):
         coordList = []
@@ -144,7 +168,6 @@ class TribeBubbles(QWidget):
                     line += 1
                     for i2 in range(number):
                         coordList.append((start_r + i2, start_c))
-
 
         for r in range(8):  # diagonal right down scoring
             for c in range(8):
@@ -189,6 +212,14 @@ class TribeBubbles(QWidget):
         for j, k in coordList:
             self.circles[j][k] = '_'
             self.circlepoints[j][k] = []
+
+    def time(self):
+        if self.gameover:
+            self.timer.stop()
+        else:
+            self.time_int += 1
+
+        self.timerlabel.setText("Time: " + str(self.time_int))
 
 
 if __name__ == '__main__':
