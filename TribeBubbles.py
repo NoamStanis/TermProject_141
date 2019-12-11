@@ -2,7 +2,7 @@ import sys
 from os import execl
 from random import randint
 
-from PyQt5.QtCore import Qt, QRect, QPoint, QSize, QTimer, QTime
+from PyQt5.QtCore import Qt, QRect, QPoint, QSize, QTimer
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QPixmap
 from PyQt5.QtWidgets import QWidget, QApplication, QMainWindow, QPushButton, QSplashScreen, QLabel
 
